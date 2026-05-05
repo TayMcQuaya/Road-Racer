@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Road Fighter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-wrap">
+    <canvas id="game" width="400" height="600"></canvas>
+    <aside id="hud-left">
+      <div class="hud-label">TRACK</div>
+      <div class="track-display">
+        <div class="track-line"></div>
+        <div class="track-flag track-flag-top">
+          <span class="flag-pole"></span>
+          <span class="flag-banner flag-red"></span>
+        </div>
+        <div class="track-flag track-flag-bottom">
+          <span class="flag-pole"></span>
+          <span class="flag-banner flag-green"></span>
+        </div>
+        <svg class="track-marker" id="track-marker" viewBox="0 0 22 38">
+          <rect x="0" y="11" width="22" height="27" fill="#d63838"/>
+          <circle cx="11" cy="11" r="11" fill="#d63838"/>
+          <rect x="3" y="15" width="16" height="11" fill="#3a1414"/>
+          <rect x="3" y="2" width="4" height="2" fill="#ffeb3b"/>
+          <rect x="15" y="2" width="4" height="2" fill="#ffeb3b"/>
+        </svg>
+      </div>
+    </aside>
+    <aside id="hud">
+      <div class="hud-block">
+        <div class="hud-label">SCORE</div>
+        <div class="hud-value" id="hud-score">000000000</div>
+        <div class="hud-sublabel">HI <span class="hi-value" id="hud-hi">000000000</span></div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">SPEED</div>
+        <div class="hud-value" id="hud-speed">0</div>
+        <div class="hud-unit">km/h</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-fuel-label">FUEL</div>
+        <div class="hud-value" id="hud-fuel">000</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">CONTROLS</div>
+        <div class="hud-keys">
+          <div class="dim">STEER</div>
+          <div><kbd>A</kbd> <kbd>D</kbd> <kbd>←</kbd> <kbd>→</kbd></div>
+          <div class="dim">ACCELERATE</div>
+          <div><kbd>X</kbd> <kbd>W</kbd> <kbd>↑</kbd> <kbd>Space</kbd></div>
+          <div class="dim">PAUSE</div>
+          <div><kbd>Esc</kbd></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+  <script src="src/road.js"></script>
+  <script src="src/input.js"></script>
+  <script src="src/player.js"></script>
+  <script src="src/traffic.js"></script>
+  <script src="src/hazards.js"></script>
+  <script src="src/pickups.js"></script>
+  <script src="src/game.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
