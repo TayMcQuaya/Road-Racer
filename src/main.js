@@ -94,8 +94,42 @@ const state = {
 };
 
 function update(dt) {
-  if (Input.justPressed('Escape')) {
+  if (Input.justPressed('Escape') && Game.phase !== 'gameover' && Game.phase !== 'finished') {
     Game.paused = !Game.paused;
+    if (Game.paused) Sound.pause();
+    else Sound.unpause();
+  }
+
+  if (Input.justPressed('KeyM')) {
+    Sound.enabled = !Sound.enabled;
+    if (!Sound.enabled) {
+      Sound.stopEngine();
+      Sound.stopSkid();
+    }
+    Game.addFloatText(Sound.enabled ? 'SOUND ON' : 'MUTED', canvas.width / 2, 100, '#ffd84a');
+  }
+
+  if (Game.paused || Game.phase === 'gameover' || Game.phase === 'finished' || Player.isBumped()) {
+    Sound.stopEngine();
+  } else if (Road.speed > 0) {
+    Sound.startEngine();
+    Sound.updateEngine(Road.speed / Road.maxSpeed);
+  } else {
+    Sound.stopEngine();
+  }
+
+  if (Game.paused || Game.phase === 'gameover' || Game.phase === 'finished' || !Player.isBumped()) {
+    Sound.stopSkid();
+  }
+
+  if (Game.phase === 'racing' && Game.fuel > 0 && Game.fuel <= 15) {
+    state.lowFuelTimer = (state.lowFuelTimer || 0) + dt;
+    if (state.lowFuelTimer >= 0.7) {
+      state.lowFuelTimer = 0;
+      Sound.lowFuelBeep();
+    }
+  } else {
+    state.lowFuelTimer = 0;
   }
 
   if (Game.paused) return;
@@ -114,6 +148,7 @@ function render() {
   Hazards.render(ctx);
   Pickups.render(ctx);
   Traffic.render(ctx);
+
   Game.render(ctx);
   if (Game.shouldRenderPlayer()) Player.render(ctx);
   Game.renderOverlay(ctx);

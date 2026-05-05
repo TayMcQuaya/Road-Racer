@@ -29,8 +29,10 @@ const Hazards = {
 
     if (!Player.isBumped()) {
       for (const m of this.manholes) {
+        const off = Road.computeOffset(m.worldY);
+        const screenX = m.x + off;
         const screenY = PLAYER_SCREEN_Y - (m.worldY - Road.scrollY);
-        const dx = Math.abs(Player.x - m.x);
+        const dx = Math.abs(Player.x - screenX);
         const dy = Math.abs(Player.y - screenY);
         if (dx < Player.width / 2 + m.r - 4 && dy < Player.height / 2 + m.r - 4) {
           Player.bumpFrom(Player.x, m);
@@ -55,8 +57,9 @@ const Hazards = {
 
   render(ctx) {
     for (const m of this.manholes) {
+      const off = Road.computeOffset(m.worldY);
       const screenY = PLAYER_SCREEN_Y - (m.worldY - Road.scrollY);
-      drawManhole(ctx, m.x, screenY, m.r);
+      drawManhole(ctx, m.x + off, screenY, m.r);
     }
   },
 };

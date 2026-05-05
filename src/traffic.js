@@ -61,7 +61,8 @@ const Traffic = {
         const dy = car.worldY - Road.scrollY;
         if (dy > 50 && dy < 280) {
           if (car.chaseDir === 0) {
-            const dx = Player.x - car.x;
+            const playerLogical = Player.x - Road.offsetX;
+            const dx = playerLogical - car.x;
             car.chaseDir = dx === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(dx);
           }
           car.x += car.chaseDir * 90 * dt;
@@ -111,12 +112,14 @@ const Traffic = {
       const halfW = (Player.width + this.carWidth) / 2 - 4;
       const halfH = (Player.height + this.carHeight) / 2 - 4;
       for (const car of this.cars) {
+        const off = Road.computeOffset(car.worldY);
+        const screenX = car.x + off;
         const screenY = PLAYER_SCREEN_Y - (car.worldY - Road.scrollY);
-        if (Math.abs(Player.x - car.x) < halfW && Math.abs(Player.y - screenY) < halfH) {
+        if (Math.abs(Player.x - screenX) < halfW && Math.abs(Player.y - screenY) < halfH) {
           const wasBumped = Player.isBumped();
-          Player.bumpFrom(car.x, car);
+          Player.bumpFrom(screenX, car);
           if (Player.lastBumpCar === car && (!wasBumped || car.bumpTimer <= 0)) {
-            let dir = -Math.sign(Player.x - car.x);
+            let dir = -Math.sign(Player.x - screenX);
             if (dir === 0) dir = Math.random() < 0.5 ? -1 : 1;
             car.bumpVx = dir * 60;
             car.bumpTimer = 1.5;
@@ -131,13 +134,16 @@ const Traffic = {
         if (ahead > 0) continue;
         car.nearMissCounted = true;
         if (car.bumpTimer > 0) continue;
-        const dx = Math.abs(Player.x - car.x);
+        const off = Road.computeOffset(car.worldY);
+        const screenX = car.x + off;
+        const dx = Math.abs(Player.x - screenX);
         if (dx <= halfW || dx > halfW + 20) continue;
         let bonus = 100;
         if (car.kind === 'blue') bonus = 200;
         else if (car.kind === 'red') bonus = 300;
         Game.bonusScore += bonus;
         Game.addFloatText(`${bonus}`, Player.x, Player.y - 30, '#ffffff');
+        Sound.whoosh();
       }
     }
   },
@@ -234,13 +240,15 @@ const Traffic = {
 
   render(ctx) {
     for (const car of this.cars) {
+      const off = Road.computeOffset(car.worldY);
+      const screenX = car.x + off;
       const screenY = PLAYER_SCREEN_Y - (car.worldY - Road.scrollY);
       if (car.bumpTimer > 0) {
         const progress = 1 - car.bumpTimer / 1.5;
         const dir = car.bumpVx >= 0 ? 1 : -1;
-        drawCarBumped(ctx, car.x, screenY, this.carWidth, this.carHeight, car.palette, progress, dir, false);
+        drawCarBumped(ctx, screenX, screenY, this.carWidth, this.carHeight, car.palette, progress, dir, false);
       } else {
-        drawCar(ctx, car.x, screenY, this.carWidth, this.carHeight, car.palette);
+        drawCar(ctx, screenX, screenY, this.carWidth, this.carHeight, car.palette);
       }
     }
   },

@@ -34,6 +34,8 @@ const Player = {
     this.vx = dir * this.bumpSpeed;
     this.bumpTimer = this.bumpDuration;
     this.lastBumpCar = carRef || null;
+    Sound.bump();
+    Sound.startSkid();
   },
 
   update(dt, canvasW, canDrive) {
@@ -47,8 +49,8 @@ const Player = {
 
       this.x += this.vx * dt;
 
-      const minXb = Road.edgeWidth + this.width / 2;
-      const maxXb = canvasW - Road.edgeWidth - this.width / 2;
+      const minXb = Road.edgeWidth + Road.offsetX + this.width / 2;
+      const maxXb = canvasW - Road.edgeWidth + Road.offsetX - this.width / 2;
       if (this.x < minXb || this.x > maxXb) {
         Game.crash(this.x, this.y);
         return;
@@ -73,8 +75,8 @@ const Player = {
 
     this.x += this.vx * dt;
 
-    const minX = Road.edgeWidth + this.width / 2;
-    const maxX = canvasW - Road.edgeWidth - this.width / 2;
+    const minX = Road.edgeWidth + Road.offsetX + this.width / 2;
+    const maxX = canvasW - Road.edgeWidth + Road.offsetX - this.width / 2;
     if (this.x < minX || this.x > maxX) {
       Game.crash(this.x, this.y);
       return;

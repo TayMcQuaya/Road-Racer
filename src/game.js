@@ -8,6 +8,7 @@ const Game = {
   crashDuration: 1.4,
 
   difficulty: 0,
+  speedDifficulty: 0,
 
   fuel: 100,
   maxFuel: 100,
@@ -20,19 +21,20 @@ const Game = {
   floatingTexts: [],
   paused: false,
 
-  raceLength: 90000,
+  raceLength: 120000,
   highScore: 0,
   finishStopOffset: 35,
   finishHaltTimer: 0,
   finishExitSpeed: 0,
 
   init() {
-    this.phase = 'countdown';
+    this.phase = 'pregame';
     this.countdown = 3;
     this.countdownTimer = 0;
     this.explosions = [];
     this.crashTimer = 0;
     this.difficulty = 0;
+    this.speedDifficulty = 0;
     this.fuel = this.maxFuel;
     this.gameoverTimer = 0;
     this.bonusScore = 0;
@@ -61,6 +63,7 @@ const Game = {
     Traffic.cars = [];
     this.fuel = Math.max(0, this.fuel - 5);
     this.spawnExplosion(x, y);
+    Sound.crash();
   },
 
   spawnExplosion(x, y) {
@@ -102,11 +105,32 @@ const Game = {
     }
     this.floatingTexts = this.floatingTexts.filter((t) => t.age < t.duration);
 
+    if (this.phase === 'pregame') {
+      if (Input.pressed.size > 0) {
+        Sound.ensureCtx();
+        Sound.intro();
+        this.phase = 'intro';
+        this.introTimer = 0;
+      }
+      return;
+    }
+
+    if (this.phase === 'intro') {
+      this.introTimer += dt;
+      if (this.introTimer >= 2.2) {
+        this.phase = 'countdown';
+        this.countdownTimer = 0;
+        Sound.countdown(3);
+      }
+      return;
+    }
+
     if (this.phase === 'countdown') {
       this.countdownTimer += dt;
       if (this.countdownTimer >= 1) {
         this.countdownTimer -= 1;
         this.countdown -= 1;
+        Sound.countdown(this.countdown);
         if (this.countdown <= 0) {
           this.phase = 'launch';
         }
@@ -155,9 +179,12 @@ const Game = {
 
     if (this.phase === 'racing') {
       const fast = Road.speed > Road.maxSpeed * 0.55;
-      this.difficulty += (fast ? 0.07 : -0.06) * dt;
-      if (this.difficulty < 0) this.difficulty = 0;
-      if (this.difficulty > 1) this.difficulty = 1;
+      this.speedDifficulty += (fast ? 0.07 : -0.06) * dt;
+      if (this.speedDifficulty < 0) this.speedDifficulty = 0;
+      if (this.speedDifficulty > 1) this.speedDifficulty = 1;
+
+      const distanceDifficulty = Math.min(1, Road.scrollY / this.raceLength);
+      this.difficulty = Math.max(this.speedDifficulty, distanceDifficulty);
 
       this.fuel -= this.fuelDrainRate * dt;
       if (this.fuel < 0) this.fuel = 0;
@@ -167,6 +194,7 @@ const Game = {
         this.gameoverTimer = 0;
         Road.speed = 0;
         Player.vx = 0;
+        Sound.failure();
       }
 
       const stopAt = this.raceLength - this.finishStopOffset;
@@ -177,6 +205,7 @@ const Game = {
         this.finishHaltTimer = 0;
         this.finishExitSpeed = 0;
         Player.vx = 0;
+        Sound.finish();
       }
     }
 
@@ -189,6 +218,7 @@ const Game = {
         Player.y -= this.finishExitSpeed * dt;
         if (Player.y < -50) {
           this.phase = 'finished';
+          Sound.success();
         }
       }
       return;
@@ -229,12 +259,21 @@ const Game = {
       drawCar(ctx, e.x, e.y, 22, 38, BLUE_PALETTE);
     }
 
+    if (this.phase === 'pregame') {
+      drawHudText(ctx, 'PRESS ANY KEY', ctx.canvas.width / 2, ctx.canvas.height / 2 - 10, 28, {
+        align: 'center', baseline: 'middle', fillStyle: '#ffffff', lineWidth: 4,
+      });
+      drawHudText(ctx, 'TO START', ctx.canvas.width / 2, ctx.canvas.height / 2 + 20, 28, {
+        align: 'center', baseline: 'middle', fillStyle: '#ffffff', lineWidth: 4,
+      });
+    }
+
     if (this.phase === 'countdown' || this.phase === 'launch') {
       const text = this.phase === 'countdown' ? String(this.countdown) : 'GO!';
       ctx.save();
-      ctx.fillStyle = '#ffd84a';
-      ctx.strokeStyle = '#1a1a1a';
-      ctx.lineWidth = 4;
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 5;
       ctx.font = 'bold 88px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';

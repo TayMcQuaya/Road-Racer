@@ -6,7 +6,7 @@ const Pickups = {
   init() {
     this.items = [];
     this.spawnTimer = 0;
-    this.nextSpawnIn = 8 + Math.random() * 8;
+    this.nextSpawnIn = 13 + Math.random() * 12;
   },
 
   update(dt) {
@@ -17,7 +17,7 @@ const Pickups = {
     }
     if (this.spawnTimer >= this.nextSpawnIn) {
       this.spawnTimer = 0;
-      this.nextSpawnIn = 8 + Math.random() * 8;
+      this.nextSpawnIn = 13 + Math.random() * 12;
       this.spawn();
     }
 
@@ -35,11 +35,14 @@ const Pickups = {
       const halfH = (Player.height + 38) / 2 - 2;
       for (let i = this.items.length - 1; i >= 0; i--) {
         const it = this.items[i];
+        const off = Road.computeOffset(it.worldY);
+        const screenX = it.x + off;
         const screenY = PLAYER_SCREEN_Y - (it.worldY - Road.scrollY);
-        if (Math.abs(Player.x - it.x) < halfW && Math.abs(Player.y - screenY) < halfH) {
+        if (Math.abs(Player.x - screenX) < halfW && Math.abs(Player.y - screenY) < halfH) {
           Game.bonusScore += 1000;
           Game.fuel = Math.min(Game.maxFuel, Game.fuel + 25);
-          Game.addFloatText('1000', it.x, screenY - 10, '#ffffff');
+          Game.addFloatText('1000', screenX, screenY - 10, '#ffffff');
+          Sound.pickup();
           this.items.splice(i, 1);
         }
       }
@@ -58,8 +61,9 @@ const Pickups = {
 
   render(ctx) {
     for (const it of this.items) {
+      const off = Road.computeOffset(it.worldY);
       const screenY = PLAYER_SCREEN_Y - (it.worldY - Road.scrollY);
-      drawPickup(ctx, it.x, screenY);
+      drawPickup(ctx, it.x + off, screenY);
     }
   },
 };
