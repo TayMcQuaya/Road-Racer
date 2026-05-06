@@ -109,7 +109,9 @@ function update(dt) {
     Game.addFloatText(Sound.enabled ? 'SOUND ON' : 'MUTED', canvas.width / 2, 100, '#ffd84a');
   }
 
-  if (Game.paused || Game.phase === 'gameover' || Game.phase === 'finished' || Player.isBumped()) {
+  const supermanActive = Game.supermanPhase !== 'inactive';
+
+  if (Game.paused || Game.phase === 'gameover' || Game.phase === 'finished' || Player.isBumped() || supermanActive) {
     Sound.stopEngine();
   } else if (Road.speed > 0) {
     Sound.startEngine();
@@ -118,11 +120,11 @@ function update(dt) {
     Sound.stopEngine();
   }
 
-  if (Game.paused || Game.phase === 'gameover' || Game.phase === 'finished' || !Player.isBumped()) {
+  if (Game.paused || Game.phase === 'gameover' || Game.phase === 'finished' || !Player.isBumped() || supermanActive) {
     Sound.stopSkid();
   }
 
-  if (Game.phase === 'racing' && Game.fuel > 0 && Game.fuel <= 15) {
+  if (Game.phase === 'racing' && Game.fuel > 0 && Game.fuel <= 15 && !supermanActive) {
     state.lowFuelTimer = (state.lowFuelTimer || 0) + dt;
     if (state.lowFuelTimer >= 0.7) {
       state.lowFuelTimer = 0;

@@ -36,6 +36,10 @@ const Player = {
     this.lastBumpCar = carRef || null;
     Sound.bump();
     Sound.startSkid();
+    if (typeof Game !== 'undefined') {
+      Game.bumpFreeTimer = 0;
+      Game.maxSpeedStreakTimer = 0;
+    }
   },
 
   update(dt, canvasW, canDrive) {

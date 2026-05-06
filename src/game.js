@@ -21,11 +21,22 @@ const Game = {
   floatingTexts: [],
   paused: false,
 
-  raceLength: 120000,
+  raceLength: 80000,
   highScore: 0,
   finishStopOffset: 35,
   finishHaltTimer: 0,
   finishExitSpeed: 0,
+
+  bumpFreeTimer: 0,
+  maxSpeedStreakTimer: 0,
+  SUPERMAN_TRIGGER_SECONDS: 30,
+  SUPERMAN_CRUISE_DURATION: 3.5,
+  supermanPlayed: false,
+  supermanPhase: 'inactive',
+  supermanY: 0,
+  supermanSide: 'left',
+  supermanCruiseTimer: 0,
+  supermanExitVy: 0,
 
   init() {
     this.phase = 'pregame';
@@ -41,6 +52,14 @@ const Game = {
     this.floatingTexts = [];
     this.finishHaltTimer = 0;
     this.finishExitSpeed = 0;
+    this.bumpFreeTimer = 0;
+    this.maxSpeedStreakTimer = 0;
+    this.supermanPlayed = false;
+    this.supermanPhase = 'inactive';
+    this.supermanY = 0;
+    this.supermanSide = 'left';
+    this.supermanCruiseTimer = 0;
+    this.supermanExitVy = 0;
     Player.y = PLAYER_SCREEN_Y;
     this.enemies = [
       { x: 130, y: 200, vy: 0 },
@@ -186,6 +205,64 @@ const Game = {
       const distanceDifficulty = Math.min(1, Road.scrollY / this.raceLength);
       this.difficulty = Math.max(this.speedDifficulty, distanceDifficulty);
 
+      const fastEnough = Road.speed >= Road.maxSpeed * 0.95;
+      const notBumped = !Player.isBumped();
+      if (fastEnough && notBumped) {
+        this.bumpFreeTimer += dt;
+        this.maxSpeedStreakTimer += dt;
+      } else {
+        this.bumpFreeTimer = 0;
+        this.maxSpeedStreakTimer = 0;
+      }
+
+      if (!this.supermanPlayed
+          && this.bumpFreeTimer >= this.SUPERMAN_TRIGGER_SECONDS
+          && this.maxSpeedStreakTimer >= this.SUPERMAN_TRIGGER_SECONDS
+          && this.supermanPhase === 'inactive') {
+        this.supermanPlayed = true;
+        this.supermanPhase = 'entering';
+        this.supermanSide = Road.offsetX < -5 ? 'right' : 'left';
+        this.supermanY = ctx.canvas.height + 40;
+        this.supermanCruiseTimer = 0;
+        this.supermanExitVy = 0;
+        Sound.superman();
+      }
+    }
+
+    if (this.supermanPhase === 'entering' || this.supermanPhase === 'cruising') {
+      const broken = Road.speed < Road.maxSpeed * 0.95
+                  || Player.isBumped()
+                  || this.phase === 'crashing';
+      if (broken) {
+        this.supermanPhase = 'exiting';
+        this.supermanExitVy = 200;
+      }
+    }
+
+    if (this.supermanPhase === 'entering') {
+      this.supermanY -= 320 * dt;
+      if (this.supermanY <= ctx.canvas.height * 0.5) {
+        this.supermanY = ctx.canvas.height * 0.5;
+        this.supermanPhase = 'cruising';
+        this.supermanCruiseTimer = 0;
+      }
+    } else if (this.supermanPhase === 'cruising') {
+      this.supermanCruiseTimer += dt;
+      if (this.supermanCruiseTimer >= this.SUPERMAN_CRUISE_DURATION) {
+        this.supermanPhase = 'exiting';
+        this.supermanExitVy = 200;
+      }
+    } else if (this.supermanPhase === 'exiting') {
+      this.supermanExitVy += 1500 * dt;
+      this.supermanY -= this.supermanExitVy * dt;
+      if (this.supermanY < -80) {
+        this.supermanPhase = 'inactive';
+        Sound.stopSuperman();
+      }
+    }
+
+    if (this.phase === 'racing') {
+
       this.fuel -= this.fuelDrainRate * dt;
       if (this.fuel < 0) this.fuel = 0;
 
@@ -290,6 +367,13 @@ const Game = {
       renderExplosion(ctx, exp, exp.timer / exp.duration);
     }
 
+    if (this.supermanPhase !== 'inactive') {
+      const sx = this.supermanSide === 'left'
+        ? Road.edgeWidth / 2
+        : ctx.canvas.width - Road.edgeWidth / 2;
+      drawSuperman(ctx, sx, this.supermanY);
+    }
+
     for (const ft of this.floatingTexts) {
       const alpha = Math.max(0, 1 - ft.age / ft.duration);
       ctx.save();
@@ -340,6 +424,49 @@ const Game = {
     }
   },
 };
+
+function drawSuperman(ctx, cx, cy) {
+  const flutter = Math.sin(state.time * 14) * 1.2;
+  const y = cy + flutter;
+
+  ctx.fillStyle = '#c8281f';
+  ctx.beginPath();
+  ctx.moveTo(cx - 6, y + 4);
+  ctx.lineTo(cx + 6, y + 4);
+  ctx.lineTo(cx + 13, y + 26);
+  ctx.lineTo(cx, y + 32);
+  ctx.lineTo(cx - 13, y + 26);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = '#1f4eb8';
+  ctx.fillRect(cx - 7, y - 4, 5, 16);
+  ctx.fillRect(cx + 2, y - 4, 5, 16);
+
+  ctx.fillStyle = '#1f4eb8';
+  ctx.beginPath();
+  ctx.ellipse(cx, y + 6, 8, 11, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#ffd84a';
+  ctx.beginPath();
+  ctx.moveTo(cx, y + 2);
+  ctx.lineTo(cx + 3, y + 6);
+  ctx.lineTo(cx, y + 10);
+  ctx.lineTo(cx - 3, y + 6);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = '#fbcfa9';
+  ctx.beginPath();
+  ctx.arc(cx, y - 6, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#1a1208';
+  ctx.beginPath();
+  ctx.arc(cx, y - 8, 5, Math.PI, Math.PI * 2);
+  ctx.fill();
+}
 
 function renderExplosion(ctx, exp, t) {
   ctx.save();

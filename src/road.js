@@ -13,15 +13,15 @@ const Road = {
 
   offsetX: 0,
   curves: [
-    { worldY: 0,      offsetX: 0 },
-    { worldY: 25000,  offsetX: 0 },
-    { worldY: 32000,  offsetX: 60 },
-    { worldY: 55000,  offsetX: 60 },
-    { worldY: 62000,  offsetX: -60 },
-    { worldY: 85000,  offsetX: -60 },
-    { worldY: 92000,  offsetX: 60 },
-    { worldY: 110000, offsetX: 60 },
-    { worldY: 117000, offsetX: 0 },
+    { worldY: 0,     offsetX: 0 },
+    { worldY: 15000, offsetX: 0 },
+    { worldY: 21000, offsetX: 60 },
+    { worldY: 36000, offsetX: 60 },
+    { worldY: 42000, offsetX: -60 },
+    { worldY: 56000, offsetX: -60 },
+    { worldY: 62000, offsetX: 60 },
+    { worldY: 73000, offsetX: 60 },
+    { worldY: 78000, offsetX: 0 },
   ],
 
   update(dt) {

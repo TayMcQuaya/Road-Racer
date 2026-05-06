@@ -46,6 +46,79 @@ const Sound = {
     setTimeout(() => this.beep(1320, 0.18, 0.28, 'square'), 160);
   },
 
+  superman() {
+    this.stopEngine();
+    this.stopSkid();
+    if (this.supermanWindSrc) return;
+    if (!this.enabled) return;
+    this.ensureCtx();
+    if (!this.ctx) return;
+    const ctx = this.ctx;
+    const t = ctx.currentTime;
+
+    this.supermanGain = ctx.createGain();
+    this.supermanGain.gain.setValueAtTime(0, t);
+    this.supermanGain.gain.linearRampToValueAtTime(0.22, t + 0.4);
+    this.supermanGain.connect(ctx.destination);
+
+    this.supermanWindSrc = this.makeNoise(2);
+    this.supermanWindSrc.loop = true;
+    this.supermanWindFilter = ctx.createBiquadFilter();
+    this.supermanWindFilter.type = 'lowpass';
+    this.supermanWindFilter.frequency.value = 600;
+    this.supermanWindFilter.Q.value = 0.9;
+    const windGain = ctx.createGain();
+    windGain.gain.value = 0.85;
+    this.supermanWindSrc.connect(this.supermanWindFilter);
+    this.supermanWindFilter.connect(windGain);
+    windGain.connect(this.supermanGain);
+    this.supermanWindSrc.start();
+
+    this.supermanWindLFO = ctx.createOscillator();
+    this.supermanWindLFO.type = 'sine';
+    this.supermanWindLFO.frequency.value = 0.7;
+    const windLFOGain = ctx.createGain();
+    windLFOGain.gain.value = 200;
+    this.supermanWindLFO.connect(windLFOGain);
+    windLFOGain.connect(this.supermanWindFilter.frequency);
+    this.supermanWindLFO.start();
+
+    this.supermanShimmerOsc = ctx.createOscillator();
+    this.supermanShimmerOsc.type = 'sine';
+    this.supermanShimmerOsc.frequency.value = 880;
+    this.supermanShimmerLFO = ctx.createOscillator();
+    this.supermanShimmerLFO.type = 'sine';
+    this.supermanShimmerLFO.frequency.value = 4;
+    const shimmerLFOGain = ctx.createGain();
+    shimmerLFOGain.gain.value = 15;
+    this.supermanShimmerLFO.connect(shimmerLFOGain);
+    shimmerLFOGain.connect(this.supermanShimmerOsc.frequency);
+    const shimmerGain = ctx.createGain();
+    shimmerGain.gain.value = 0.08;
+    this.supermanShimmerOsc.connect(shimmerGain);
+    shimmerGain.connect(this.supermanGain);
+    this.supermanShimmerOsc.start();
+    this.supermanShimmerLFO.start();
+  },
+
+  stopSuperman() {
+    if (!this.supermanWindSrc || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.supermanGain.gain.cancelScheduledValues(t);
+    this.supermanGain.gain.setValueAtTime(this.supermanGain.gain.value, t);
+    this.supermanGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    const sources = [this.supermanWindSrc, this.supermanWindLFO, this.supermanShimmerOsc, this.supermanShimmerLFO];
+    setTimeout(() => {
+      sources.forEach((s) => { try { s.stop(); } catch (e) {} });
+    }, 600);
+    this.supermanWindSrc = null;
+    this.supermanWindLFO = null;
+    this.supermanWindFilter = null;
+    this.supermanShimmerOsc = null;
+    this.supermanShimmerLFO = null;
+    this.supermanGain = null;
+  },
+
   whoosh() {
     if (!this.enabled) return;
     this.ensureCtx();
