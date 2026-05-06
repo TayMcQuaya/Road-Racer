@@ -9,14 +9,22 @@ html, body {
   color: #fff;
 }
 
-.synthwave-bg {
+.synthwave-bg,
+.vignette-bg {
   position: fixed;
   inset: 0;
   pointer-events: none;
   overflow: hidden;
 }
 
-.synthwave-bg + #game-wrap,
+.vignette-bg {
+  background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a14 70%, #050508 100%);
+  display: none;
+}
+
+body.bg-vignette .synthwave-bg { display: none; }
+body.bg-vignette .vignette-bg { display: block; }
+
 #game-wrap {
   z-index: 1;
 }

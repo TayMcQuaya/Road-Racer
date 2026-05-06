@@ -109,6 +109,12 @@ function update(dt) {
     Game.addFloatText(Sound.enabled ? 'SOUND ON' : 'MUTED', canvas.width / 2, 100, '#ffd84a');
   }
 
+  if (Input.justPressed('KeyC')) {
+    document.body.classList.toggle('bg-vignette');
+    const isVignette = document.body.classList.contains('bg-vignette');
+    Game.addFloatText(isVignette ? 'BG: VIGNETTE' : 'BG: SUNSET', canvas.width / 2, 130, '#ffd84a');
+  }
+
   const supermanActive = Game.supermanPhase !== 'inactive';
 
   if (Game.paused || Game.phase === 'gameover' || Game.phase === 'finished' || Player.isBumped() || supermanActive) {
